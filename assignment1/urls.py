@@ -21,3 +21,6 @@ from django.urls import path, include
 urlpatterns = [
     path('', include('books.urls')),
 ]
+urlpatterns +=[
+    path('api-auth/', include('rest_framework.urls')),
+]

@@ -6,7 +6,8 @@ from books.serializers import BookSerializer
 from django.http import Http404
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status, generics, permissions
+from books.permissions import IsOwnerOrReadOnly
 
 
 class BookList(APIView):
@@ -24,6 +25,10 @@ class BookList(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
 
 class BookDetail(APIView):
@@ -53,3 +58,18 @@ class BookDetail(APIView):
         book = self.get_object(pk)
         book.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+
+from django.contrib.auth.models import User
+from books.serializers import AuthorSerializer
+
+
+class AuthorList(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = AuthorSerializer
+
+
+class AuthorDetail(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = AuthorSerializer
